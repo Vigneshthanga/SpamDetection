@@ -25,16 +25,12 @@ def preprocess(text):
     for w in words_list:
         rootWord=ps.stem(w)
         Stem_words.append(rootWord)
-#    print(words_list)
-#    print(Stem_words)
     text = ' '.join(word for word in Stem_words)
     return text
 
 def clean_text(text):
     # remove urls
     text = re.sub(r'http\S+', ' ', text)
-    # or replace urls with word httpaddress
-    # text = re.sub('(http|https)://[^\s]*', 'httpaddress', text)
 
     # replace email address with word emailaddress
     text = re.sub('[^\s]+@[^\s]+', ' ', text)
@@ -42,9 +38,6 @@ def clean_text(text):
     # replace "$" with word "dollar".
     text = re.sub('[$]+', 'dollar', text)
 
-    # remove numbers
-    #text = re.sub("\d+", ' ', text)
-    # or replace numbers with word number
     text = re.sub('[0-9]+', '', text)
 
     # remove html tags

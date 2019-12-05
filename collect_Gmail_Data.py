@@ -19,53 +19,12 @@ from nltk.stem.snowball import SnowballStemmer
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-'''
-def preprocess(text):
-    words_list = ""
-    sstemmer = SnowballStemmer("english")
-    lemmatizer = WordNetLemmatizer()
-    text = text.split()
-    for w in text:
-        w = lemmatizer.lemmatize(w)
-        words_list = words_list + sstemmer.stem(w) + " "
-    return words_list
-'''
-def preprocess(text):
-	set(stopwords.words('english'))
-
-	stop_words = set(stopwords.words('english'))
-
-	word_tokens = word_tokenize(text)
-
-	words_list = []
-	for w in word_tokens:
-        if w not in stop_words:
-            words_list.append(w)
-
-	Stem_words = []
-	ps =PorterStemmer()
-	for w in words_list:
-        rootWord=ps.stem(w)
-        Stem_words.append(rootWord)
-	print(words_list)
-	print(Stem_words)
-
 def clean_text(text):
     # remove urls
     text = re.sub(r'http\S+', ' ', text)
-    # or replace urls with word httpaddress
-    # text = re.sub('(http|https)://[^\s]*', 'httpaddress', text)
 
     # replace email address with word emailaddress
     text = re.sub('[^\s]+@[^\s]+', ' ', text)
-
-    # replace "$" with word "dollar".
-    #text = re.sub('[$]+', ' ', text)
-
-    # remove numbers
-    #text = re.sub("\d+", ' ', text)
-    # or replace numbers with word number
-    #text = re.sub('[0-9]+', 'number', text)
 
     # remove html tags
     text = re.sub('<[^<>]+>', ' ', text)
@@ -76,22 +35,10 @@ def clean_text(text):
     # remove punctuations
     text = text.translate(str.maketrans(' ', ' ', string.punctuation))
     text = text.lower()
-    #text = text.replace('rn', ' ')
     return text
 
 
 def GetMessage(service, user_id, msg_id):
-  """Get a Message with given ID.
-
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    msg_id: The ID of the Message required.
-
-  Returns:
-    A Message.
-  """
   try:
     message = service.users().messages().get(userId=user_id, id=msg_id).execute()
 
@@ -101,17 +48,6 @@ def GetMessage(service, user_id, msg_id):
 
 
 def GetMimeMessage(service, user_id, msg_id, idx):
-  """Get a Message and use it to create a MIME Message.
-
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    msg_id: The ID of the Message required.
-
-  Returns:
-    A MIME Message, consisting of data from Message.
-  """
   try:
     message = service.users().messages().get(userId=user_id, id=msg_id,
                                              format='raw').execute()
@@ -122,9 +58,6 @@ def GetMimeMessage(service, user_id, msg_id, idx):
     msg_str = str(mail.text_plain)
     msg_str = msg_str.strip("")
     msg_str = clean_text(msg_str)
-    msg_str = preprocess(msg_str)
-
-    #print(msg_str)
 
   except errors.HttpError:
     print('An error occurred:')
@@ -143,7 +76,6 @@ def GetMimeMessage(service, user_id, msg_id, idx):
   filename = "./ham/email"
   file_extension = ".txt"
   new_fname = "{}-{}{}".format(filename, idx, file_extension)
-  #print(new_fname)
   f= open(new_fname,"w+")
   f.write(sub+"\n")
   f.write(msg_str)
@@ -200,21 +132,6 @@ def main():
       idx+=1
 
 
-def ListMessagesMatchingQuery(service, user_id, query=''):
-  """List all Messages of the user's mailbox matching the query.
-
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    query: String used to filter messages returned.
-    Eg.- 'from:user@some_domain.com' for Messages from a particular sender.
-
-  Returns:
-    List of Messages that match the criteria of the query. Note that the
-    returned list contains Message IDs, you must use get with the
-    appropriate ID to get the details of a Message.
-  """
   try:
     response = service.users().messages().list(userId=user_id,
                                                q=query).execute()
@@ -234,19 +151,7 @@ def ListMessagesMatchingQuery(service, user_id, query=''):
 
 
 def ListMessagesWithLabels(service, user_id, label_ids=[]):
-  """List all Messages of the user's mailbox with label_ids applied.
 
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    label_ids: Only return Messages with these labelIds applied.
-
-  Returns:
-    List of Messages that have all required Labels applied. Note that the
-    returned list contains Message IDs, you must use get with the
-    appropriate id to get the details of a Message.
-  """
   try:
     response = service.users().messages().list(userId=user_id,
                                                labelIds=label_ids).execute()
