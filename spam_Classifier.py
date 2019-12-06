@@ -8,64 +8,28 @@ import sys
 import pandas as pd
 from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
+import scattertext as st
+import spacy
+from pprint import pprint
 
 filenames = ["spam_csv.csv", "ham_csv.csv", "ham_2.csv", "spam_2.csv"]
 
-
 def createCloud(dt):
-    comment_words = ' '
+    comment_words =' '
     for i in range(len(dt)):
         row = dt[i]
         text = row[0]
         comment_words = comment_words + text + ' '
     wordcloud = WordCloud(width = 800, height = 800,
                 background_color ='white',
+                #stopwords = stopwords, 
                 min_font_size = 10).generate(comment_words)
-
     # plot the WordCloud image                        
     plt.figure(figsize = (8, 8), facecolor = None)
     plt.imshow(wordcloud)
     plt.axis("off")
     plt.tight_layout(pad = 0)
-
     plt.show()
-
-    for i in range(len(dt)):
-        row = dt[i]
-        if (row[1] == "1"):
-            continue
-        text = row[0]
-        comment_words = comment_words + text + ' '
-    wordcloud = WordCloud(width = 800, height = 800,
-                background_color ='white',
-                min_font_size = 10).generate(comment_words)
-
-    # plot the WordCloud image                        
-    plt.figure(figsize = (8, 8), facecolor = None)
-    plt.imshow(wordcloud)
-    plt.axis("off")
-    plt.tight_layout(pad = 0)
-
-    plt.show()
-
-    for i in range(len(dt)):
-        row = dt[i]
-        if (row[1] == "0"):
-            continue
-        text = row[0]
-        comment_words = comment_words + text + ' '
-    wordcloud = WordCloud(width = 800, height = 800,
-                background_color ='white',
-                min_font_size = 10).generate(comment_words)
-
-    # plot the WordCloud image                        
-    plt.figure(figsize = (8, 8), facecolor = None)
-    plt.imshow(wordcloud)
-    plt.axis("off")
-    plt.tight_layout(pad = 0)
-
-    plt.show()
-
 
 csv.field_size_limit(sys.maxsize)
 
@@ -100,6 +64,15 @@ def getUniquewords(dt):
             _set.add(word)
     return _set
 
+def getWords(dt):
+    _count = 0
+    for i in range(len(dt)):
+        row = dt[i]
+        text = row[0]
+        ls = text.split()
+        for word in ls:
+            _count += 1
+    return _count
 
 def splitDataset(dataset, splitRatio):
     trainSize = int(len(dataset) * splitRatio)
@@ -110,17 +83,6 @@ def splitDataset(dataset, splitRatio):
         index = random.randrange(len(copy))
         trainSet.append(copy.pop(index))
     return [trainSet, copy]
-
-'''
-def separateByClass(dataset):
-	separated = {}
-	for i in range(len(dataset)):
-		vector = dataset[i]
-		if (vector[-1] not in separated):
-			separated[vector[-1]] = []
-		separated[vector[-1]].append(vector)
-	return separated
-'''
 
 def accuracy(testSet, predictions):
     correct = 0
@@ -162,6 +124,9 @@ def calcProb(test, testlen, sketch, spam_cnt, ham_cnt, pseudo_add):
         ls = text.split()
         total_spam_prob = 1
         total_ham_prob = 1
+        pseudo_add = 0
+        for word in ls:
+            pseudo_add+=1
         for word in ls:
             word_class_cnt = 0
             word_class_cnt = sketch[Email(word,"0")]
@@ -198,14 +163,12 @@ def createCSV():
     combined_csv.to_csv( "all_data.csv")
 
 if (__name__ == '__main__'):
-    createCSV()
-    dt = loadCsv("/Users/vigneshkumarthangarajan/Documents/255-Data-Mining/project/small/all_data.csv")
+    dt = loadCsv("/Users/vigneshkumarthangarajan/Documents/255-Data-Mining/project/emailClassifyDMproject/all_data.csv")
     train, test = splitDataset(dt,0.7)
-    createCloud(train)
+#    createCloud(train)
     _tset = getUniquewords(train)
     print("train words "+str(len(_tset)))
-    _set = getUniquewords(test)
-    print("test words "+str(len(_set)))
+    _count_test = getWords(test)
     print('train len: ' + str(len(train)) + ' test len: '+str(len(test)))
     trainlen = len(train)
     testlen = len(test)
@@ -218,18 +181,17 @@ if (__name__ == '__main__'):
             spam_cnt += 1
         else:
             ham_cnt += 1
-    '''
-    sketch = CountMinSketch(18000, 15) # 'w' and 'd' parameter for count-min sketch
+
+    sketch = CountMinSketch(100000, 15) # 'w' and 'd' parameter for count-min sketch
     buildCMS(train, sketch)
     print("spam_cnt "+str(spam_cnt))
     print("ham_cnt "+str(ham_cnt))
     print(ham_cnt)
-    _set_len = len(_set)
-    pred_vec = calcProb(test, testlen, sketch, spam_cnt, ham_cnt, _set_len)
-#    print(vec)
+    pred_vec = calcProb(test, testlen, sketch, spam_cnt, ham_cnt, _count_test)
+#    print(sketch.gettable())
     correct_cnt = 0
     inc_cnt = 0
 #    print(test)
 #    print(train)
     print(accuracy(test,pred_vec))
-'''
+
